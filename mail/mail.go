@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/smtp"
+	"os"
 )
 
 func (m *Mail) getURL() string {
@@ -20,6 +21,7 @@ func New(from, to, subject, password, smtpHost string, smtpPort int) *Mail {
 
 // Mail main struct for send mail
 type Mail struct {
+	Debug    bool
 	buffer   bytes.Buffer
 	From     string
 	To       string
@@ -81,6 +83,12 @@ func (m *Mail) SendMail(body bytes.Buffer) error {
 	}
 
 	auth := smtp.PlainAuth("", m.From, m.Password, m.smtp.host)
+
+	if m.Debug {
+		if _, err := m.buffer.WriteTo(os.Stderr); err != nil {
+			return err
+		}
+	}
 
 	return smtp.SendMail(m.getURL(), auth, m.From, []string{m.To}, m.buffer.Bytes())
 }
